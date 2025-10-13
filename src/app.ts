@@ -17,7 +17,14 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+// Path de uploads con detección automática
+// Detecta si está compilado (dist/) o en desarrollo (src/)
+const isCompiled = __dirname.includes('dist')
+const uploadsPath = isCompiled
+    ? path.join(__dirname, '../../uploads')  // Compilado: dist/src/app.js -> ../../uploads
+    : path.join(__dirname, '../uploads')     // Desarrollo: src/app.ts -> ../uploads
+
+app.use('/uploads', express.static(uploadsPath))
 
 loadRoutes(app)
 

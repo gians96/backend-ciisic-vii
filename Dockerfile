@@ -52,6 +52,9 @@ RUN npm ci --only=production && npm cache clean --force
 # Copiar archivos compilados
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 
+# Copiar archivos de templates HTML (no son compilados por TypeScript)
+COPY --from=builder --chown=nodejs:nodejs /app/src/api/inscription/utils/templates ./dist/src/api/inscription/utils/templates
+
 # Exponer puerto para Dokploy
 EXPOSE 3000/tcp
 
