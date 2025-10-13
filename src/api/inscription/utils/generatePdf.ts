@@ -40,9 +40,16 @@ export async function generateInscripcionPDF(user: {
 
     const logoPath = path.join(process.cwd(), 'uploads', 'logo_congreso.png')
     let logoBase64 = ''
-    if (fs.existsSync(logoPath)) {
-        const logoBuffer = fs.readFileSync(logoPath)
-        logoBase64 = `data:image/pngbase64,${logoBuffer.toString('base64')}`
+
+    try {
+        if (fs.existsSync(logoPath)) {
+            const logoBuffer = fs.readFileSync(logoPath)
+            logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`
+        } else {
+            console.warn(`⚠️ Logo no encontrado en: ${logoPath}`)
+        }
+    } catch (err) {
+        console.error('Error cargando logo:', err)
     }
 
     html = html
