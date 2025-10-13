@@ -13,10 +13,12 @@ export async function generateInscripcionPDF(user: {
     fechaCreacion: Date
     fechaAprobada?: Date
 }) {
-    const pdfPath = path.join(
-        __dirname,
-        `../../../../uploads/insc_${user.dni}.pdf`
-    )
+    const uploadsDir = path.join(process.cwd(), 'uploads')
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true })
+    }
+
+    const pdfPath = path.join(uploadsDir, `insc_${user.dni}.pdf`)
 
     const qrDataURL = await QRCode.toDataURL(String(user.id))
 
@@ -30,14 +32,17 @@ export async function generateInscripcionPDF(user: {
             : '---'
     }
 
-    const templatePath = path.join(__dirname, '../../inscription/utils/templates/inscription.html')
+    const templatePath = path.join(
+        __dirname,
+        '../../inscription/utils/templates/inscription.html'
+    )
     let html = fs.readFileSync(templatePath, 'utf8')
 
-    const logoPath = path.join(__dirname, '../../../../uploads/logo_congreso.png')
+    const logoPath = path.join(process.cwd(), 'uploads', 'logo_congreso.png')
     let logoBase64 = ''
     if (fs.existsSync(logoPath)) {
         const logoBuffer = fs.readFileSync(logoPath)
-        logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`
+        logoBase64 = `data:image/pngbase64,${logoBuffer.toString('base64')}`
     }
 
     html = html
@@ -64,6 +69,8 @@ export async function generateInscripcionPDF(user: {
         },
         printBackground: true,
         preferCSSPageSize: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
     }
 
     const pdfBuffer = await htmlPdf.generatePdf(file, options)
