@@ -66,6 +66,7 @@ COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 # Copiar las plantillas HTML necesarias (no son compilados por TypeScript)
 COPY --from=builder --chown=nodejs:nodejs /app/src/api/inscription/utils/templates ./dist/src/api/inscription/utils/templates
 COPY --from=builder --chown=nodejs:nodejs /app/uploads/logo_congreso.png ./uploads/logo_congreso.png
+COPY --from=builder --chown=nodejs:nodejs /app/public ./public
 
 # Configuración Puppeteer
 ENV PUPPETEER_SKIP_DOWNLOAD=true

@@ -38,7 +38,7 @@ export async function generateInscripcionPDF(user: {
     )
     let html = fs.readFileSync(templatePath, 'utf8')
 
-    const logoPath = path.join(process.cwd(), 'uploads', 'logo_congreso.png')
+    const logoPath = path.join(process.cwd(), 'public', 'logo_congreso.png')
     let logoBase64 = ''
 
     try {
@@ -49,7 +49,7 @@ export async function generateInscripcionPDF(user: {
             console.warn(`⚠️ Logo no encontrado en: ${logoPath}`)
         }
     } catch (err) {
-        console.error('Error cargando logo:', err)
+        console.error('❌ Error cargando logo:', err)
     }
 
     html = html
