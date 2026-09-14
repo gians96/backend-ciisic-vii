@@ -1,30 +1,34 @@
 import express from 'express'
 import morgan from 'morgan'
-import path from 'path'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
+import helmet from 'helmet'
 import { errorHandler } from './middlewares/errorHandler'
 import { loadRoutes } from './loaders/routesLoader'
+import { env } from '../config/env'
+import { normalizeErrorResponses } from './middlewares/normalizeResponse'
 
 const app = express()
 
-app.use(express.json())
+app.disable('x-powered-by')
+app.set('trust proxy', 1)
+app.use(express.json({ limit: '1mb' }))
+app.use(helmet())
+app.use(normalizeErrorResponses)
 
 app.use(morgan('dev'))
 
 app.use(cors({
-    origin: '*',
+    origin(origin, callback) {
+        if (!origin || env.CORS_ORIGINS.includes(origin)) return callback(null, true)
+        return callback(new Error('Origen no permitido por CORS'))
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 
-// Path de uploads con detección automática
-// Detecta si está compilado (dist/) o en desarrollo (src/)
-const isCompiled = __dirname.includes('dist')
-const uploadsPath = isCompiled
-    ? path.join(__dirname, '../../uploads')  // Compilado: dist/src/app.js -> ../../uploads
-    : path.join(__dirname, '../uploads')     // Desarrollo: src/app.ts -> ../uploads
-
-app.use('/uploads', express.static(uploadsPath))
+app.use('/api/v1/auth/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }))
+app.use('/api/v1/reniec', rateLimit({ windowMs: 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }))
 
 loadRoutes(app)
 

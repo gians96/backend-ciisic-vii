@@ -1,5 +1,8 @@
 import * as inscriptionStateController from '../controllers/inscription-state'
 import { AppRoute, buildRouter } from '../../../core/routes'
+import { verifyAdminRole } from '../../../middlewares/auth'
+import { validateBody } from '../../../middlewares/validate'
+import { namedSchema, namedUpdateSchema } from '../../sharedValidation'
 
 const routes: AppRoute[] = [
     {
@@ -12,7 +15,7 @@ const routes: AppRoute[] = [
         method: 'post',
         path: '/v1/inscription-state',
         handler: inscriptionStateController.create,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(namedSchema)],
     },
     {
         method: 'get',
@@ -24,13 +27,13 @@ const routes: AppRoute[] = [
         method: 'put',
         path: '/v1/inscription-state/:id',
         handler: inscriptionStateController.update,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(namedUpdateSchema)],
     },
     {
         method: 'delete',
         path: '/v1/inscription-state/:id',
         handler: inscriptionStateController.remove,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     }
 ]
 

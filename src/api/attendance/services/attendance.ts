@@ -155,10 +155,6 @@ export async function createAttendanceWithWindow(input: Asistencia) {
   const { now, ymd } = nowInLima()
   const fechaEventoYMD = toYMD(evento.fecha)
   
-  console.log('Debug - Fecha evento (BD):', evento.fecha)
-  console.log('Debug - Fecha evento (YMD):', fechaEventoYMD)
-  console.log('Debug - Fecha actual (YMD):', ymd)
-  
   if (fechaEventoYMD !== ymd) {
     throw new HttpError(
       `La asistencia debe registrarse en la fecha del evento (evento=${fechaEventoYMD}, actual=${ymd})`,

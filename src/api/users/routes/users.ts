@@ -1,42 +1,45 @@
 import * as usersController from '../controllers/users'
 import { AppRoute, buildRouter } from '../../../core/routes'
+import { verifyAdminRole } from '../../../middlewares/auth'
+import { validateBody } from '../../../middlewares/validate'
+import { userSchema, userUpdateSchema } from '../../sharedValidation'
 
 const routes: AppRoute[] = [
     {
         method: 'get',
         path: '/v1/users',
         handler: usersController.list,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     },
     {
         method: 'post',
         path: '/v1/users',
         handler: usersController.create,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(userSchema)],
     },
     {
         method: 'get',
         path: '/v1/users/:id',
         handler: usersController.find,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     },
     {
         method: 'get',
         path: '/v1/users/email/:email',
         handler: usersController.findByEmail,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     },
     {
         method: 'put',
         path: '/v1/users/:id',
         handler: usersController.update,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(userUpdateSchema)],
     },
     {
         method: 'delete',
         path: '/v1/users/:id',
         handler: usersController.remove,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     },
 ]
 

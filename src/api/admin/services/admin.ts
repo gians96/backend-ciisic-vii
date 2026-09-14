@@ -2,8 +2,13 @@ import { prisma } from '../../../database/prisma'
 import { Administradores, AdminWithRole } from '../../../types/admin'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { env } from '../../../../config/env'
 
-const SECRET = process.env.JWT_SECRET || 'supersecret'
+const SECRET = env.JWT_SECRET
+const publicAdminSelect = {
+    id: true, nombres: true, apellidos: true, correoElectronico: true,
+    creadoEn: true, actualizadoEn: true, rolId: true,
+} as const
 
 export function generateToken(admin: AdminWithRole) {
     const expiration = Math.floor(Date.now() / 1000) + (60 * 60)
@@ -27,12 +32,12 @@ export function generateToken(admin: AdminWithRole) {
 }
 
 export async function getAdmins() {
-    return prisma.administradores.findMany()
+    return prisma.administradores.findMany({ select: publicAdminSelect })
 }
 
 export async function getAdminById(id: number) {
     return prisma.administradores.findUnique({
-        where: { id },
+        where: { id }, select: publicAdminSelect,
     })
 }
 
@@ -43,17 +48,20 @@ export async function createAdmin(data: Administradores) {
         data: {
             ...data,
             contrasena: hashedPassword,
-            rolId: 1,
+            rolId: data.rolId || 2,
             creadoEn: new Date(),
             actualizadoEn: new Date(),
-        },
+        }, select: publicAdminSelect,
     })
 }
 
 export async function updateAdmin(id: number, data: Partial<Administradores>) {
+    const updateData = { ...data }
+    if (updateData.contrasena) updateData.contrasena = await bcrypt.hash(updateData.contrasena, 10)
     return prisma.administradores.update({
         where: { id },
-        data,
+        data: updateData,
+        select: publicAdminSelect,
     })
 }
 

@@ -1,42 +1,51 @@
 import * as adminController from '../controllers/admin'
 import { AppRoute, buildRouter } from '../../../core/routes'
+import { verifyAdminRole, verifySuperAdminRole } from '../../../middlewares/auth'
+import { validateBody } from '../../../middlewares/validate'
+import { createAdminSchema, loginSchema, updateAdminSchema } from '../validation'
 
 const routes: AppRoute[] = [
     {
         method: 'get',
         path: '/v1/admin',
         handler: adminController.list,
-        middlewares: [],
+        middlewares: [verifySuperAdminRole],
     },
     {
         method: 'post',
         path: '/v1/admin',
         handler: adminController.create,
-        middlewares: [],
+        middlewares: [verifySuperAdminRole, validateBody(createAdminSchema)],
     },
     {
         method: 'get',
         path: '/v1/admin/:id',
         handler: adminController.find,
-        middlewares: [],
+        middlewares: [verifySuperAdminRole],
     },
     {
         method: 'put',
         path: '/v1/admin/:id',
         handler: adminController.update,
-        middlewares: [],
+        middlewares: [verifySuperAdminRole, validateBody(updateAdminSchema)],
     },
     {
         method: 'delete',
         path: '/v1/admin/:id',
         handler: adminController.remove,
-        middlewares: [],
+        middlewares: [verifySuperAdminRole],
     },
     {
         method: 'post',
         path: '/v1/auth/login',
         handler: adminController.login,
-        middlewares: [],
+        middlewares: [validateBody(loginSchema)],
+    },
+    {
+        method: 'get',
+        path: '/v1/auth/session',
+        handler: adminController.session,
+        middlewares: [verifyAdminRole],
     }
 ]
 

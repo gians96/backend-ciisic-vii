@@ -1,15 +1,16 @@
 import { DocumentType, normaliceData } from './types'
+import { env } from '../../../../config/env'
 
 export const nubetecApi = {
     baseApi: 'https://api-test.nube-tec.com/api/v1/consultation',
-    token: process.env.NUBETEC_TOKEN || '',
+    token: env.NUBETEC_TOKEN,
     endpoints: [
         { type: DocumentType.DNI, path: '/dni/', method: 'GET' },
         { type: DocumentType.CE, path: '/ce/', method: 'GET' },
         { type: DocumentType.RUC, path: '/ruc/', method: 'GET' }
     ],
     headers: {
-        'X-API-Token': `${process.env.NUBETEC_TOKEN}`
+        'X-API-Token': env.NUBETEC_TOKEN
     }
 }
 

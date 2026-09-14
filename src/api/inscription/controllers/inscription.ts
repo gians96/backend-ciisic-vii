@@ -1,5 +1,9 @@
 import { Request, Response } from 'express'
+import { Prisma } from '@prisma/client'
 import { getInscriptions, getInscriptionById, createInscription, deleteInscription, updateInscriptionStatus } from '../services/inscription'
+import { removeUploadedFile } from '../../../middlewares/upload'
+import { createInscriptionSchema } from '../validation'
+import type { CreateInscription } from '../../../types/inscription'
 
 // Definir tipo para el archivo de multer
 type MulterFile = {
@@ -32,9 +36,6 @@ export async function list(req: Request, res: Response) {
 
 export async function create(req: RequestWithFile, res: Response) {
     try {
-        console.log('📥 Datos recibidos en el backend:', req.body)
-        console.log('📁 Archivo recibido:', req.file)
-
         // Manejar tanto JSON como form-data
         let requestData
 
@@ -97,25 +98,29 @@ export async function create(req: RequestWithFile, res: Response) {
             }
         }
 
-        console.log('🔧 Datos procesados para Prisma:', requestData)
-
-        const inscription = await createInscription(requestData)
+        const validatedData = await createInscriptionSchema.validate(requestData, { abortEarly: false, stripUnknown: true })
+        const inscription = await createInscription(validatedData as CreateInscription)
         return res.status(201).json({
             success: true,
             message: 'Inscripción creada exitosamente',
             data: inscription
         })
     } catch (error) {
-        console.error('❌ Error en controlador:', error)
+        removeUploadedFile(req.file)
 
         const errorMessage = (error as Error).message
 
-        // Manejo específico de errores comunes
-        if (errorMessage.includes('código de operación') && errorMessage.includes('ya está registrado')) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            const target = Array.isArray(error.meta?.target)
+                ? error.meta.target.map(String)
+                : [String(error.meta?.target || '')]
+            const isOperationDuplicate = target.some((field) => field.includes('numeroOperacion'))
             return res.status(409).json({
                 success: false,
-                error: 'Código de operación duplicado',
-                message: errorMessage,
+                code: isOperationDuplicate ? 'OPERATION_ALREADY_REGISTERED' : 'DUPLICATE_RECORD',
+                message: isOperationDuplicate
+                    ? 'El número de operación ya está registrado.'
+                    : 'Ya existe un registro con estos datos.',
             })
         }
 
@@ -127,16 +132,9 @@ export async function create(req: RequestWithFile, res: Response) {
             })
         }
 
-        if (errorMessage.includes('Unique constraint failed')) {
-            return res.status(409).json({
-                success: false,
-                error: 'Datos duplicados',
-                message: 'Ya existe un registro con estos datos. Por favor, verifique la información.',
-            })
-        }
-
         return res.status(400).json({
             success: false,
+            code: 'INSCRIPTION_INVALID',
             error: 'Error en la creación de la inscripción',
             message: errorMessage,
         })
@@ -200,12 +198,11 @@ export async function updateStatus(req: Request, res: Response) {
             message: 'Estado de inscripción actualizado correctamente',
             data: updated,
         })
-    } catch (error) {
-        console.error('Error al actualizar estado:', error)
+    } catch {
+        console.error('Error al actualizar el estado de una inscripción')
         return res.status(500).json({
             success: false,
             error: 'Error al actualizar el estado de la inscripción',
-            details: (error as Error).message,
         })
     }
 }

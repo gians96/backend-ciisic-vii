@@ -1,37 +1,31 @@
 import * as voucherController from '../controllers/voucher'
 import { AppRoute, buildRouter } from '../../../core/routes'
-import { upload } from '../../../middlewares/upload'
+import { verifyAdminRole } from '../../../middlewares/auth'
 
 const routes: AppRoute[] = [
     {
         method: 'get',
         path: '/v1/voucher',
         handler: voucherController.list,
-        middlewares: [],
-    },
-    {
-        method: 'post',
-        path: '/v1/voucher',
-        handler: voucherController.create,
-        middlewares: [upload.single('file')],
+        middlewares: [verifyAdminRole],
     },
     {
         method: 'get',
-        path: '/v1/voucher/check/:codigo',
-        handler: voucherController.checkCode,
-        middlewares: [],
+        path: '/v1/voucher/:id/file',
+        handler: voucherController.download,
+        middlewares: [verifyAdminRole],
     },
     {
         method: 'get',
         path: '/v1/voucher/:id',
         handler: voucherController.find,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     },
     {
         method: 'delete',
         path: '/v1/voucher/:id',
         handler: voucherController.remove,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     }
 ]
 

@@ -1,18 +1,18 @@
 import fs from 'fs'
 import path from 'path'
 import SibApiV3Sdk from 'sib-api-v3-sdk'
+import { env } from '../../../../config/env'
 
 const client = SibApiV3Sdk.ApiClient.instance
-client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY || ''
+client.authentications['api-key'].apiKey = env.BREVO_API_KEY
 const emailApi = new SibApiV3Sdk.TransactionalEmailsApi()
 
 export async function sendApprovalEmail(toEmail: string, userName: string, pdfPath: string) {
     try {
-        const sender = { email: process.env.BREVO_SENDER!, name: process.env.BREVO_SENDER_NAME }
+        if (!env.BREVO_API_KEY || !env.BREVO_SENDER) throw new Error('Brevo no está configurado')
+        const sender = { email: env.BREVO_SENDER, name: env.BREVO_SENDER_NAME }
 
         const fileName = path.basename(pdfPath)
-        const downloadUrl = `${process.env.API_URL}/uploads/${fileName}`
-
         // Leer la plantilla HTML
         const templatePath = path.join(__dirname, 'templates', 'approval.html')
         let htmlContent = fs.readFileSync(templatePath, 'utf8')
@@ -20,17 +20,17 @@ export async function sendApprovalEmail(toEmail: string, userName: string, pdfPa
         // Reemplazar placeholders
         htmlContent = htmlContent
             .replace('{{userName}}', userName)
-            .replace('{{downloadUrl}}', downloadUrl)
 
         // Enviar correo
         await emailApi.sendTransacEmail({
             sender,
             to: [{ email: toEmail }],
-            subject: process.env.BREVO_SENDER_SUBJECT,
+            subject: env.BREVO_SENDER_SUBJECT,
             htmlContent,
+            attachment: [{ name: fileName, content: fs.readFileSync(pdfPath).toString('base64') }],
         })
 
-    } catch (err) {
-        console.error('Error al enviar correo Brevo:', err)
+    } catch {
+        console.error('No se pudo enviar un correo mediante Brevo')
     }
 }

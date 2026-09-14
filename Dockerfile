@@ -3,6 +3,9 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 # Instalar dependencias del sistema necesarias para Prisma y Puppeteer
 RUN apk add --no-cache \
   chromium \
@@ -54,22 +57,21 @@ RUN adduser -S nodejs -u 1001
 WORKDIR /app
 RUN mkdir -p uploads && chown nodejs:nodejs /app uploads
 
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 USER nodejs
 
 # Copiar dependencias y código
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 
 # Copiar las plantillas HTML necesarias (no son compilados por TypeScript)
 COPY --from=builder --chown=nodejs:nodejs /app/src/api/inscription/utils/templates ./dist/src/api/inscription/utils/templates
 COPY --from=builder --chown=nodejs:nodejs /app/public ./public
-
-# Configuración Puppeteer
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 EXPOSE 3000
 

@@ -2,13 +2,33 @@ name: CI - Backend Congreso
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, staging]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, staging]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: ciisic_test
+          MYSQL_USER: ciisic
+          MYSQL_PASSWORD: ciisic_test
+          MYSQL_ROOT_PASSWORD: root_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot_test"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: mysql://ciisic:ciisic_test@127.0.0.1:3306/ciisic_test
+      JWT_SECRET: ci-test-secret-at-least-32-characters
+      CORS_ORIGINS: http://localhost:3000
+      API_URL: http://localhost:3000
 
     steps:
 
@@ -34,6 +54,9 @@ jobs:
       # 5. Verificar build de TypeScript
       - name: build
         run: npm run build
+
+      - name: apply test migrations
+        run: npx prisma migrate deploy
 
       # 6. Ejecutar tests con Jest
       - name: tests

@@ -1,11 +1,17 @@
 import { Express } from 'express'
 import fs from 'fs'
 import path from 'path'
+import { prisma } from '../database/prisma'
 
 export const loadRoutes = (app: Express) => {
   // Health check endpoint
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', message: 'Server is running' })
+  app.get('/health', async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`
+      res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() })
+    } catch {
+      res.status(503).json({ status: 'error', timestamp: new Date().toISOString() })
+    }
   })
 
   const apiPath = path.join(__dirname, '../api')
@@ -25,10 +31,11 @@ export const loadRoutes = (app: Express) => {
             
             if (routes) {
               app.use('/api', routes)
-              console.log(`✅ Rutas cargadas: ${moduleName}/${fileName}`)
+              if (process.env.NODE_ENV !== 'test') console.log(`Rutas cargadas: ${moduleName}/${fileName}`)
             }
           } catch (error) {
-            console.log(`❌ Error cargando rutas ${moduleName}/${fileName}:`, error instanceof Error ? error.message : error)
+            const detail = error instanceof Error ? error.message : 'error desconocido'
+            throw new Error(`No se pudieron cargar las rutas ${moduleName}/${fileName}: ${detail}`)
           }
         }
       })

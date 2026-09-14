@@ -23,8 +23,8 @@ async function main() {
 }
 
 main()
-    .catch((e) => {
-        console.error(e)
+    .catch(() => {
+        console.error('No se pudieron ejecutar los seeds')
         process.exit(1)
     })
     .finally(async () => {

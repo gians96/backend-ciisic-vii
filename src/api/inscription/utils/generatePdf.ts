@@ -1,7 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import QRCode from 'qrcode'
-import htmlPdf from 'html-pdf-node'
+import puppeteer from 'puppeteer'
+import { env } from '../../../../config/env'
 
 export async function generateInscripcionPDF(user: {
     id: number
@@ -13,12 +14,12 @@ export async function generateInscripcionPDF(user: {
     fechaCreacion: Date
     fechaAprobada?: Date
 }) {
-    const uploadsDir = path.join(process.cwd(), 'uploads')
+    const uploadsDir = env.UPLOADS_DIR
     if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true })
     }
 
-    const pdfPath = path.join(uploadsDir, `insc_${user.dni}.pdf`)
+    const pdfPath = path.join(uploadsDir, `credential_${user.id}.pdf`)
 
     const qrDataURL = await QRCode.toDataURL(String(user.id))
 
@@ -48,8 +49,8 @@ export async function generateInscripcionPDF(user: {
         } else {
             console.warn(`⚠️ Logo no encontrado en: ${logoPath}`)
         }
-    } catch (err) {
-        console.error('❌ Error cargando logo:', err)
+    } catch {
+        console.error('No se pudo cargar el logo para la credencial')
     }
 
     html = html
@@ -64,24 +65,32 @@ export async function generateInscripcionPDF(user: {
         .replace('{{FECHA_APROBADA}}', formatDate(user.fechaAprobada))
         .replace('{{QR}}', qrDataURL)
 
-    const file = { content: html }
-    const options = {
-        format: 'A4',
-        landscape: true,
-        margin: {
-            top: '10px',
-            right: '10px',
-            bottom: '10px',
-            left: '10px',
-        },
-        printBackground: true,
-        preferCSSPageSize: true,
+    const browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-    }
+        ...(process.env.PUPPETEER_EXECUTABLE_PATH
+            ? { executablePath: process.env.PUPPETEER_EXECUTABLE_PATH }
+            : {}),
+    })
 
-    const pdfBuffer = await htmlPdf.generatePdf(file, options)
-    fs.writeFileSync(pdfPath, pdfBuffer)
+    try {
+        const page = await browser.newPage()
+        await page.setContent(html, { waitUntil: 'load' })
+        await page.pdf({
+            path: pdfPath,
+            format: 'A4',
+            landscape: true,
+            margin: {
+                top: '10px',
+                right: '10px',
+                bottom: '10px',
+                left: '10px',
+            },
+            printBackground: true,
+            preferCSSPageSize: true,
+        })
+    } finally {
+        await browser.close()
+    }
 
     return pdfPath
 }

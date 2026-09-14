@@ -1,5 +1,8 @@
 import * as paymentTypesController from '../controllers/payment-type'
 import { AppRoute, buildRouter } from '../../../core/routes'
+import { verifyAdminRole } from '../../../middlewares/auth'
+import { validateBody } from '../../../middlewares/validate'
+import { paymentTypeSchema, paymentTypeUpdateSchema } from '../../sharedValidation'
 
 const routes: AppRoute[] = [
     {
@@ -12,7 +15,7 @@ const routes: AppRoute[] = [
         method: 'post',
         path: '/v1/payment-type',
         handler: paymentTypesController.create,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(paymentTypeSchema)],
     },
     {
         method: 'get',
@@ -24,13 +27,13 @@ const routes: AppRoute[] = [
         method: 'put',
         path: '/v1/payment-type/:id',
         handler: paymentTypesController.update,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(paymentTypeUpdateSchema)],
     },
     {
         method: 'delete',
         path: '/v1/payment-type/:id',
         handler: paymentTypesController.remove,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     },
 ]
 

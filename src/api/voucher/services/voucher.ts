@@ -1,39 +1,21 @@
-// import { prisma } from '../../../database/prisma'
-import { Voucher } from '../../../types/voucher'
+import { prisma } from '../../../database/prisma'
 
 export async function getVouchers() {
-    // return prisma.voucher.findMany()
-    return { success: false, message: 'no implementado' }
+    return prisma.inscripcion.findMany({
+        where: { file: { not: null } },
+        select: { id: true, file: true, numeroOperacion: true, fechaPago: true, creadoEn: true },
+    })
 
 }
 
 export async function getVoucherById(id: number) {
-    // return prisma.voucher.findUnique({
-    //     where: { id }
-    // })
-    return { success: false, message: 'no implementado', id }
-
-}
-
-export async function createVoucher(data: Voucher) {
-    // return prisma.voucher.create({ data })
-    return { success: false, message: 'no implementado', data }
+    return prisma.inscripcion.findFirst({
+        where: { id, file: { not: null } },
+        select: { id: true, file: true, numeroOperacion: true, fechaPago: true, creadoEn: true },
+    })
 
 }
 
 export async function deleteVoucher(id: number) {
-    // return prisma.voucher.delete({
-    //     where: { id }
-    // })
-    return { success: false, message: 'no implementado', id }
-
-}
-
-export async function checkVoucherCodeExists(codigo: string) {
-    // const voucher = await prisma.voucher.findUnique({
-    //     where: { codigo }
-    // })
-    // return !!voucher // Retorna true si existe, false si no
-    return { success: false, message: 'no implementado', codigo }
-
+    return prisma.inscripcion.update({ where: { id }, data: { file: null } })
 }

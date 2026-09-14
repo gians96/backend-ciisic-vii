@@ -46,7 +46,7 @@ export async function createInscription(data: CreateInscription): Promise<Inscri
             })
 
             if (existingInscription) {
-                throw new Error(`Ya existe una inscripción registrada con el DNI "${data.usuario.dni}" o el email "${data.usuario.correoElectronico}". No se permite registrar el mismo usuario múltiples veces.`)
+                throw new Error('Ya existe una inscripción registrada para este usuario.')
             }
         }
 
@@ -64,16 +64,6 @@ export async function createInscription(data: CreateInscription): Promise<Inscri
                     celular: data.usuario.celular,
                 }
             })
-        }
-
-
-        // 4. Verificar si el código de operación ya existe
-        const existingOperation = await tx.inscripcion.findFirst({
-            where: { numeroOperacion: data.numeroOperacion }
-        })
-
-        if (existingOperation) {
-            throw new Error(`El código de operación "${data.numeroOperacion}" ya está registrado. Por favor, verifique su código o use uno diferente.`)
         }
 
         // Si el email es institucional, marcar el campo correspondiente
@@ -180,8 +170,8 @@ export async function updateInscriptionStatus(id: number, estadoId: number) {
         })
 
         await sendApprovalEmail(user.correoElectronico, user.nombres, pdfPath)
-    } catch (err) {
-        console.error('⚠️ Error generando PDF o enviando correo:', err)
+    } catch {
+        console.error('No se pudo generar o enviar la credencial de una inscripción')
     }
 
     return updated

@@ -1,4 +1,5 @@
 import { DocumentType, normaliceData } from './types'
+import { env } from '../../../../config/env'
 // interface ResponseRUCDecolecta {
 //     data: DataRUC;
 //     success: boolean;
@@ -39,14 +40,14 @@ export interface DataDNI {
 
 const decolectaApi = {
     baseApi: 'https://api.decolecta.com/',
-    token: process.env.DECOLECTA_TOKEN || '',
+    token: env.DECOLECTA_TOKEN,
     endpoints: [
         { type: DocumentType.DNI, path: 'v1/reniec/dni/', method: 'GET' },
         { type: DocumentType.RUC, path: 'v1/sunat/ruc/', method: 'GET' }
     ],
     headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.DECOLECTA_TOKEN}`
+        'Authorization': `Bearer ${env.DECOLECTA_TOKEN}`
     }
 }
 

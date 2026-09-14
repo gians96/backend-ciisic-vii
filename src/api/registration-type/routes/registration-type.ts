@@ -1,5 +1,8 @@
 import * as registrationTypesController from '../controllers/registration-type'
 import { AppRoute, buildRouter } from '../../../core/routes'
+import { verifyAdminRole } from '../../../middlewares/auth'
+import { validateBody } from '../../../middlewares/validate'
+import { registrationTypeSchema, registrationTypeUpdateSchema } from '../../sharedValidation'
 
 const routes: AppRoute[] = [
     {
@@ -12,7 +15,7 @@ const routes: AppRoute[] = [
         method: 'post',
         path: '/v1/registration-types',
         handler: registrationTypesController.create,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(registrationTypeSchema)],
     },
     {
         method: 'get',
@@ -24,13 +27,13 @@ const routes: AppRoute[] = [
         method: 'put',
         path: '/v1/registration-types/:id',
         handler: registrationTypesController.update,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(registrationTypeUpdateSchema)],
     },
     {
         method: 'delete',
         path: '/v1/registration-types/:id',
         handler: registrationTypesController.remove,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     },
 ]
 

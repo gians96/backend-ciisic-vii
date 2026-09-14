@@ -8,6 +8,7 @@ import {
     deleteAdmin,
     loginAdmin
 } from '../services/admin'
+import type { AuthenticatedRequest } from '../../../middlewares/auth'
 
 export async function list(req: Request, res: Response) {
     try {
@@ -97,10 +98,15 @@ export async function login(req: Request, res: Response) {
         const { jwt } = await loginAdmin(correoElectronico, contrasena)
 
         return res.status(200).json({ jwt })
-    } catch (error) {
+    } catch {
         return res.status(401).json({
-            error: 'Error en el login',
-            details: (error as Error).message,
+            success: false,
+            code: 'INVALID_CREDENTIALS',
+            message: 'Credenciales incorrectas',
         })
     }
+}
+
+export function session(req: AuthenticatedRequest, res: Response) {
+    return res.status(200).json({ success: true, user: req.user })
 }

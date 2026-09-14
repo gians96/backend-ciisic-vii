@@ -1,6 +1,6 @@
 import * as inscriptionController from '../controllers/inscription'
 import { AppRoute, buildRouter } from '../../../core/routes'
-import { upload } from '../../../middlewares/upload'
+import { upload, validateUploadedFileContent } from '../../../middlewares/upload'
 import { verifyAdminRole } from '../../../middlewares/auth'
 
 const routes: AppRoute[] = [
@@ -14,7 +14,7 @@ const routes: AppRoute[] = [
         method: 'post',
         path: '/v1/inscription',
         handler: inscriptionController.create,
-        middlewares: [upload.single('file')], // Agregar middleware para subida de archivo
+        middlewares: [upload.single('file'), validateUploadedFileContent],
     },
     {
         method: 'get',

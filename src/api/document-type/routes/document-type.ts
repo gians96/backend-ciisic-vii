@@ -1,5 +1,8 @@
 import * as typeDocumentCtrl from '../controllers/document-type.ctrl'
 import { AppRoute, buildRouter } from '../../../core/routes'
+import { verifyAdminRole } from '../../../middlewares/auth'
+import { validateBody } from '../../../middlewares/validate'
+import { documentTypeSchema, documentTypeUpdateSchema } from '../../sharedValidation'
 
 const routes: AppRoute[] = [
     {
@@ -12,7 +15,7 @@ const routes: AppRoute[] = [
         method: 'post',
         path: '/v1/document-type',
         handler: typeDocumentCtrl.createCtrl,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(documentTypeSchema)],
     },
     {
         method: 'get',
@@ -24,13 +27,13 @@ const routes: AppRoute[] = [
         method: 'put',
         path: '/v1/document-type/:id',
         handler: typeDocumentCtrl.updateCtrl,
-        middlewares: [],
+        middlewares: [verifyAdminRole, validateBody(documentTypeUpdateSchema)],
     },
     {
         method: 'delete',
         path: '/v1/document-type/:id',
         handler: typeDocumentCtrl.removeCtrl,
-        middlewares: [],
+        middlewares: [verifyAdminRole],
     },
 ]
 
